@@ -44,12 +44,23 @@ class CurseMetaDB:
     def load_meta(self, meta: list):
         for item in meta:
             self._cur.execute("""INSERT INTO projects VALUES (%(Id)s, %(PrimaryCategoryId)s, %(Name)s, %(WebSiteURL)s,
-                                 %(Likes)s, %(DownloadCount)s, %(PackageType)s, %(PopularityScore)s);""", item)
+                                 %(Likes)s, %(DownloadCount)s, %(PackageType)s, %(PopularityScore)s)
+                                 ON CONFLICT (project) DO UPDATE SET project=%(Id)s;""", item)
             for file in item["LatestFiles"]:
                 file["Project"] = item["Id"]
-                file["Dependencies"] = [json.dumps(i) for i in file["Dependencies"]]
                 self._cur.execute("""INSERT INTO files VALUES (%(Id)s, %(FileName)s, %(DownloadURL)s,
-                                     %(ReleaseType)s, %(Dependencies)s, %(GameVersion)s, %(Project)s);""", file)
+                                     %(ReleaseType)s, %(GameVersion)s, %(Project)s) ON CONFLICT DO NOTHING;""", file)
+                for dep in file["Dependencies"]:
+                    dep["File"] = file["Id"]
+                    self._cur.execute("""INSERT INTO deps VALUES (%(File)s, %(AddOnId)s, %(Type)s);""", dep)
+
+            if "Attachments" not in item:
+                continue;
+
+            for attachment in item["Attachments"]:
+                attachment["Project"] = item["Id"]
+                self._cur.execute("""INSERT INTO attachments VALUES(%(Project)s, %(IsDefault)s,
+                                     %(ThumbnailUrl)s, %(Url)s, %(Title)s, %(Description)s)""", attachment)
 
         self._save()
 
@@ -66,6 +77,13 @@ class CurseMetaDB:
 
         self.exec("""CREATE TABLE IF NOT EXISTS files
                      (file integer PRIMARY KEY, name varchar, download varchar,
-                     type varchar, dependencies text[], version text[], project integer);""")
+                     type varchar, version text[], project integer);""")
+
+        self.exec("""CREATE TABLE IF NOT EXISTS deps
+                     (file integer, project integer, type varchar);""")
+
+        self.exec("""CREATE TABLE IF NOT EXISTS attachments
+                     (project integer, isdefault bool, thumbnail varchar, url varchar,
+                     title varchar, description varchar);""")
 
         self._save()
