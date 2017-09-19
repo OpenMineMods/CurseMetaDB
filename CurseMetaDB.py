@@ -24,6 +24,7 @@
 """
 
 import psycopg2
+import json
 
 
 class CurseMetaDB:
@@ -42,9 +43,13 @@ class CurseMetaDB:
 
     def load_meta(self, meta: list):
         for item in meta:
-            print(type(item))
-            self._cur.execute("""INSERT INTO projects (project, category, name, url)
-                         VALUES (%(Id)s, %(PrimaryCategoryId)s, %(Name)s, %(WebSiteURL)s);""", item)
+            self._cur.execute("""INSERT INTO projects VALUES (%(Id)s, %(PrimaryCategoryId)s, %(Name)s, %(WebSiteURL)s,
+                                 %(Likes)s, %(DownloadCount)s, %(PackageType)s, %(PopularityScore)s);""", item)
+            for file in item["LatestFiles"]:
+                file["Project"] = item["Id"]
+                file["Dependencies"] = [json.dumps(i) for i in file["Dependencies"]]
+                self._cur.execute("""INSERT INTO files VALUES (%(Id)s, %(FileName)s, %(DownloadURL)s,
+                                     %(ReleaseType)s, %(Dependencies)s, %(GameVersion)s, %(Project)s);""", file)
 
         self._save()
 
@@ -55,7 +60,12 @@ class CurseMetaDB:
 
     def _create_tables(self):
         self.exec("""CREATE TABLE IF NOT EXISTS projects
-                     (id serial PRIMARY KEY, project integer, category integer,
-                     name varchar, url varchar);""")
+                     (project integer PRIMARY KEY, category integer,
+                     name varchar, url varchar, likes integer, downloads float,
+                     type varchar, popularity float, stage varchar);""")
+
+        self.exec("""CREATE TABLE IF NOT EXISTS files
+                     (file integer PRIMARY KEY, name varchar, download varchar,
+                     type varchar, dependencies text[], version text[], project integer);""")
 
         self._save()
