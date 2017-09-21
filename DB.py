@@ -23,18 +23,43 @@
     additional permission to convey the resulting work.
 """
 
+from fuzzywuzzy.fuzz import partial_ratio
+
 
 class DB:
     def __init__(self, meta: dict):
         self.meta = meta
-        self.project_map = None
-        self.file_map = None
 
         self._gen_maps()
 
+    # Querying
+
+    def get_project(self, pid: int):
+        if pid in self.project_map:
+            return self.project_map[pid]
+        return False
+
+    def get_file(self, fid: int):
+        if fid in self.file_map:
+            return self.file_map[fid]
+        return False
+
+    def search_projects(self, q: str, limit=25, threshold=80):
+        out = list()
+        for n in self.project_map.values():
+            ratio = partial_ratio(q.lower(), n["Name"].lower())
+            if ratio >= threshold:
+                out.append((n, ratio))
+        out.sort(key=lambda x: x[1])
+        return [i[0] for i in out[::-1]][:limit]
+
+    # Internal
+
     def _gen_maps(self):
+        # ID -> Project mappings
         self.project_map = dict()
         self.file_map = dict()
+
         for project in self.meta["Data"]:
             for file in project["LatestFiles"]:
                 file["_Project"] = project["Id"]
