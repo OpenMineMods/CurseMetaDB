@@ -50,6 +50,8 @@ class DB:
             ratio = partial_ratio(q.lower(), n["Name"].lower())
             if ratio >= threshold:
                 out.append((n, ratio))
+                if len(out) >= limit:
+                    break
         out.sort(key=lambda x: x[1])
         return [i[0] for i in out[::-1]][:limit]
 
