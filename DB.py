@@ -53,10 +53,12 @@ class DB:
             return self.files[fid]
         return False
 
-    def search_projects(self, q: str, limit=25, threshold=80, ptype="*"):
+    def search_projects(self, q: str, ptype: str, limit=25, threshold=80, version="*"):
         out = list()
         for n in self.projects.values():
             if ptype != "*" and n["type"] != ptype:
+                continue
+            if version != "*" and version not in n["versions"]:
                 continue
             part_ratio = partial_ratio(q.lower(), n["title"].lower())
             full_ratio = ratio(q.lower(), n["title"].lower())
@@ -93,6 +95,11 @@ class DB:
             return out
         return False
 
+    def get_popular(self, ptype: str, limit=25, version="*"):
+        if version != "*":
+            return [i for i in self.popular[ptype] if version in self.get_project(i)["versions"]][:limit]
+        return self.popular[ptype][:limit]
+
     # Init
 
     def _gen_popular(self):
@@ -105,15 +112,21 @@ class DB:
     def _load_project(self, project_folder: str):
         manifest = loads(open(path.join(project_folder, "index.json")).read())
         project = clean_project(manifest)
+        project["versions"] = list()
+
         files = self._ls(path.join(project_folder, "files"))
         for file in files:
             file = clean_file(loads(open(file).read()))
             file["project"] = project["id"]
+            project["versions"] += file["versions"]
 
             project["files"].append(file["id"])
             self.files[file["id"]] = file
 
+        project["versions"] = list(set(project["versions"]))
         self.projects[project["id"]] = project
+
+    # Utils
 
     def _ls(self, folder: str):
         return [path.join(folder, i) for i in listdir(folder)]
