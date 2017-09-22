@@ -53,7 +53,8 @@ file_fields = {
     "IsAlternate": "alternate",
     "FileName": "name",
     "AlternateFileId": "alternateFile",
-    "DownloadURL": "url"
+    "DownloadURL": "url",
+    "Id": "id"
 }
 
 attachment_fields = {
@@ -93,6 +94,7 @@ def cleanup_curses_mess(blob: dict):
             for orig in file_fields:
                 clean_file[file_fields[orig]] = file[orig]
 
+            clean_file["project"] = clean_project["id"]
             clean_file["date"] = int(datetime.strptime(clean_file["date"], "%Y-%m-%dT%H:%M:%S").strftime("%S"))
 
             clean_project["files"].append(file["Id"])

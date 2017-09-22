@@ -64,3 +64,8 @@ class DB:
                     break
         out.sort(key=lambda x: x[1])
         return [i[0] for i in out[::-1]][:limit]
+
+    def search_files(self, filename: str):
+        for file in self.meta["files"].values():
+            if file["filename"].lower() == filename.lower():
+                return file
