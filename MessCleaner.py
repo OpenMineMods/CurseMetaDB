@@ -37,10 +37,12 @@ project_fields = {
     "Name": "title",
     "IsFeatured": "featured",
     "PopularityScore": "popularity",
-    "GamePopularityRank": "rank"
+    "GamePopularityRank": "rank",
+    "PrimaryAuthorName": "author",
+    "Id": "id"
 }
 
-file_1_fields = {
+file_fields = {
     "FileNameOnDisk": "filename",
     "ReleaseType": "type",
     "Dependencies": "dependencies",
@@ -52,6 +54,21 @@ file_1_fields = {
     "FileName": "name",
     "AlternateFileId": "alternateFile",
     "DownloadURL": "url"
+}
+
+attachment_fields = {
+    "Description": "desc",
+    "Url": "url",
+    "ThumbnailUrl": "thumbnail",
+    "IsDefault": "default",
+    "Title": "name"
+}
+
+type_map = {
+    "mod": "mod",
+    "singleFile": "texturePack",
+    "folder": "world",
+    "modPack": "modpack"
 }
 
 
@@ -66,20 +83,32 @@ def cleanup_curses_mess(blob: dict):
 
         clean_project["featured"] = bool(clean_project["featured"])
         clean_project["downloads"] = int(clean_project["downloads"])
+        clean_project["type"] = type_map[clean_project["type"]]
 
         clean_project["files"] = list()
 
         for file in project["LatestFiles"]:
             clean_file = dict()
 
-            for orig in file_1_fields:
-                clean_file[file_1_fields[orig]] = file[orig]
+            for orig in file_fields:
+                clean_file[file_fields[orig]] = file[orig]
 
             clean_file["date"] = int(datetime.strptime(clean_file["date"], "%Y-%m-%dT%H:%M:%S").strftime("%S"))
 
             clean_project["files"].append(file["Id"])
             cleaned_files[file["Id"]] = clean_file
 
+        clean_project["attachments"] = list()
+
+        if "Attachments" in project:
+            for attachment in project["Attachments"]:
+                clean_attachment = dict()
+
+                for orig in attachment_fields:
+                    clean_attachment[attachment_fields[orig]] = attachment[orig]
+
+                clean_project["attachments"].append(clean_attachment)
+
         cleaned_projects[project["Id"]] = clean_project
 
-    return cleaned_projects
+    return {"projects": cleaned_projects, "files": cleaned_files}

@@ -23,50 +23,42 @@
     additional permission to convey the resulting work.
 """
 
-from fuzzywuzzy.fuzz import partial_ratio
+from fuzzywuzzy.fuzz import partial_ratio, ratio
+from MessCleaner import cleanup_curses_mess
 
 
 class DB:
     def __init__(self, meta: dict):
-        self.meta = meta
-
-        self._gen_maps()
+        self.meta = cleanup_curses_mess(meta)
 
     # Querying
 
     def get_project(self, pid: int):
-        if pid in self.project_map:
-            return self.project_map[pid]
+        if pid in self.meta["projects"]:
+            return self.meta["projects"][pid]
         return False
 
     def get_file(self, fid: int):
-        if fid in self.file_map:
-            return self.file_map[fid]
+        if fid in self.meta["files"]:
+            return self.meta["files"][fid]
         return False
 
-    def search_projects(self, q: str, limit=25, threshold=80):
+    def search_projects(self, q: str, limit=25, threshold=80, ptype="*"):
         out = list()
-        for n in self.project_map.values():
-            ratio = partial_ratio(q.lower(), n["Name"].lower())
-            if ratio >= threshold:
-                out.append((n, ratio))
+        for n in self.meta["projects"].values():
+            if ptype != "*" and n["type"] != ptype:
+                continue
+            part_ratio = partial_ratio(q.lower(), n["title"].lower())
+            full_ratio = ratio(q.lower(), n["title"].lower())
+            body_ratio = partial_ratio(q.lower(), n["desc"].lower())
+            if part_ratio >= threshold:
+                out.append((n, part_ratio + full_ratio))
+                if len(out) >= limit:
+                    break
+                continue
+            if body_ratio >= threshold:
+                out.append((n, body_ratio))
                 if len(out) >= limit:
                     break
         out.sort(key=lambda x: x[1])
         return [i[0] for i in out[::-1]][:limit]
-
-    # Internal
-
-    def _gen_maps(self):
-        # ID -> Project mappings
-        self.project_map = dict()
-        self.file_map = dict()
-
-        for project in self.meta["Data"]:
-            for file in project["LatestFiles"]:
-                file["_Project"] = project["Id"]
-                self.file_map[file["Id"]] = file
-
-            del project["LatestFiles"]
-
-            self.project_map[project["Id"]] = project
