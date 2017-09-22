@@ -67,7 +67,7 @@ attachment_fields = {
 
 type_map = {
     "mod": "mod",
-    "singleFile": "texturePack",
+    "singleFile": "texturepack",
     "folder": "world",
     "modPack": "modpack"
 }

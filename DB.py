@@ -31,6 +31,9 @@ class DB:
     def __init__(self, meta: dict):
         self.meta = cleanup_curses_mess(meta)
 
+        self.popular = dict()
+        self._gen_popular()
+
     # Querying
 
     def get_project(self, pid: int):
@@ -69,3 +72,12 @@ class DB:
         for file in self.meta["files"].values():
             if file["filename"].lower() == filename.lower():
                 return file
+
+    # Init
+
+    def _gen_popular(self):
+        for ptype in ["mod", "texturepack", "world", "modpack"]:
+            of_type = dict()
+            for project in [i for i in self.meta["projects"] if self.get_project(i)["type"] == ptype]:
+                of_type[project] = self.get_project(project)
+            self.popular[ptype] = sorted(of_type, key=lambda x: of_type[x]["rank"])
