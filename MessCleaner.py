@@ -38,7 +38,7 @@ project_fields = {
     "IsFeatured": "featured",
     "PopularityScore": "popularity",
     "GamePopularityRank": "rank",
-    "PrimaryAuthorName": "author",
+    "PrimaryAuthorName": "primaryAuthor",
     "Id": "id"
 }
 
@@ -63,6 +63,12 @@ attachment_fields = {
     "ThumbnailUrl": "thumbnail",
     "IsDefault": "default",
     "Title": "name"
+}
+
+category_fields = {
+    "URL": "url",
+    "Id": "id",
+    "Name": "title"
 }
 
 type_map = {
@@ -97,3 +103,11 @@ def clean_file(file: dict):
     cleaned_file["date"] = int(datetime.strptime(cleaned_file["date"], "%Y-%m-%dT%H:%M:%S").strftime("%S"))
 
     return cleaned_file
+
+
+def clean_category(category: dict):
+    cleaned_category = dict()
+    for orig in category_fields:
+        cleaned_category[category_fields[orig]] = category[orig]
+
+    return cleaned_category

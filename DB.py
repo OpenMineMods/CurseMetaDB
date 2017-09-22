@@ -26,13 +26,15 @@
 from fuzzywuzzy.fuzz import partial_ratio, ratio
 from os import listdir, path
 from json import loads
-from MessCleaner import clean_project, clean_file
+from MessCleaner import clean_project, clean_file, clean_category
 
 
 class DB:
     def __init__(self, meta_folder: str):
         self.projects = dict()
         self.files = dict()
+        self.categories = dict()
+        self.authors = dict()
 
         project_list = self._ls(meta_folder)
         for project in project_list:
@@ -51,6 +53,11 @@ class DB:
     def get_file(self, fid: int):
         if fid in self.files:
             return self.files[fid]
+        return False
+
+    def get_category(self, cid: int):
+        if cid in self.categories:
+            return self.categories[cid]
         return False
 
     def search_projects(self, q: str, ptype: str, limit=25, threshold=80, version="*"):
@@ -113,6 +120,8 @@ class DB:
         manifest = loads(open(path.join(project_folder, "index.json")).read())
         project = clean_project(manifest)
         project["versions"] = list()
+        project["categories"] = list()
+        project["authors"] = list()
 
         files = self._ls(path.join(project_folder, "files"))
         for file in files:
@@ -122,6 +131,15 @@ class DB:
 
             project["files"].append(file["id"])
             self.files[file["id"]] = file
+
+        for category in manifest["Categories"]:
+            category = clean_category(category)
+            self.categories[category["id"]] = category
+            project["categories"].append(category["id"])
+
+        for author in manifest["Authors"]:
+            self.authors[author["Name"]] = author["Url"]
+            project["authors"].append(author["Name"])
 
         project["versions"] = list(set(project["versions"]))
         self.projects[project["id"]] = project
