@@ -50,14 +50,16 @@ class DB:
                 continue
             part_ratio = partial_ratio(q.lower(), n["title"].lower())
             full_ratio = ratio(q.lower(), n["title"].lower())
+
             body_ratio = partial_ratio(q.lower(), n["desc"].lower())
+            full_body_ratio = ratio(q.lower(), n["desc"].lower())
             if part_ratio >= threshold:
                 out.append((n, part_ratio + full_ratio))
                 if len(out) >= limit:
                     break
                 continue
             if body_ratio >= threshold:
-                out.append((n, body_ratio))
+                out.append((n, body_ratio + full_body_ratio))
                 if len(out) >= limit:
                     break
         out.sort(key=lambda x: x[1])
