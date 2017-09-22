@@ -18,7 +18,7 @@
     Additional permission under GNU GPL version 3 section 7
 
     If you modify this Program, or any covered work, by linking or combining
-    it with curseDb (or a modified version of that program), containing parts
+    it with curseMeta (or a modified version of that program), containing parts
     covered by the terms of the EUPL, the licensors of this Program grant you
     additional permission to convey the resulting work.
 """
