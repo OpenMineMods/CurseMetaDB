@@ -24,12 +24,19 @@
 """
 
 from fuzzywuzzy.fuzz import partial_ratio, ratio
-from MessCleaner import cleanup_curses_mess
+from os import listdir, path
+from json import loads
+from MessCleaner import clean_project, clean_file
 
 
 class DB:
-    def __init__(self, meta: dict):
-        self.meta = cleanup_curses_mess(meta)
+    def __init__(self, meta_folder: str):
+        self.projects = dict()
+        self.files = dict()
+
+        project_list = self._ls(meta_folder)
+        for project in project_list:
+            self._load_project(project)
 
         self.popular = dict()
         self._gen_popular()
@@ -37,18 +44,18 @@ class DB:
     # Querying
 
     def get_project(self, pid: int):
-        if pid in self.meta["projects"]:
-            return self.meta["projects"][pid]
+        if pid in self.projects:
+            return self.projects[pid]
         return False
 
     def get_file(self, fid: int):
-        if fid in self.meta["files"]:
-            return self.meta["files"][fid]
+        if fid in self.files:
+            return self.files[fid]
         return False
 
     def search_projects(self, q: str, limit=25, threshold=80, ptype="*"):
         out = list()
-        for n in self.meta["projects"].values():
+        for n in self.projects.values():
             if ptype != "*" and n["type"] != ptype:
                 continue
             part_ratio = partial_ratio(q.lower(), n["title"].lower())
@@ -69,15 +76,44 @@ class DB:
         return [i[0] for i in out[::-1]][:limit]
 
     def search_files(self, filename: str):
-        for file in self.meta["files"].values():
+        for file in self.files.values():
             if file["filename"].lower() == filename.lower():
                 return file
+
+    def get_files_for_version(self, project: int, version: str):
+        project = self.get_project(project)
+        if not project:
+            return project
+        files = project["files"]
+        out = list()
+        for file in files:
+            if version in self.get_file(file)["versions"]:
+                out.append(file)
+        if len(out) > 0:
+            return out
+        return False
 
     # Init
 
     def _gen_popular(self):
         for ptype in ["mod", "texturepack", "world", "modpack"]:
             of_type = dict()
-            for project in [i for i in self.meta["projects"] if self.get_project(i)["type"] == ptype]:
+            for project in [i for i in self.projects if self.get_project(i)["type"] == ptype]:
                 of_type[project] = self.get_project(project)
             self.popular[ptype] = sorted(of_type, key=lambda x: of_type[x]["rank"])
+
+    def _load_project(self, project_folder: str):
+        manifest = loads(open(path.join(project_folder, "index.json")).read())
+        project = clean_project(manifest)
+        files = self._ls(path.join(project_folder, "files"))
+        for file in files:
+            file = clean_file(loads(open(file).read()))
+            file["project"] = project["id"]
+
+            project["files"].append(file["id"])
+            self.files[file["id"]] = file
+
+        self.projects[project["id"]] = project
+
+    def _ls(self, folder: str):
+        return [path.join(folder, i) for i in listdir(folder)]

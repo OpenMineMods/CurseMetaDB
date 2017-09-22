@@ -73,44 +73,27 @@ type_map = {
 }
 
 
-def cleanup_curses_mess(blob: dict):
-    cleaned_projects = dict()
-    cleaned_files = dict()
-    for project in blob["Data"]:
-        clean_project = dict()
+def clean_project(project: dict):
+    cleaned_project = dict()
+    for orig in project_fields:
+        cleaned_project[project_fields[orig]] = project[orig]
 
-        for orig in project_fields:
-            clean_project[project_fields[orig]] = project[orig]
+    cleaned_project["featured"] = bool(cleaned_project["featured"])
+    cleaned_project["downloads"] = int(cleaned_project["downloads"])
+    cleaned_project["type"] = type_map[cleaned_project["type"]]
+    cleaned_project["files"] = list()
 
-        clean_project["featured"] = bool(clean_project["featured"])
-        clean_project["downloads"] = int(clean_project["downloads"])
-        clean_project["type"] = type_map[clean_project["type"]]
+    return cleaned_project
 
-        clean_project["files"] = list()
 
-        for file in project["LatestFiles"]:
-            clean_file = dict()
+def clean_file(file: dict):
+    if type(file) == list:
+        file = file[0]
+    cleaned_file = dict()
+    for orig in file_fields:
+        cleaned_file[file_fields[orig]] = file[orig]
 
-            for orig in file_fields:
-                clean_file[file_fields[orig]] = file[orig]
+    cleaned_file["project"] = None
+    cleaned_file["date"] = int(datetime.strptime(cleaned_file["date"], "%Y-%m-%dT%H:%M:%S").strftime("%S"))
 
-            clean_file["project"] = clean_project["id"]
-            clean_file["date"] = int(datetime.strptime(clean_file["date"], "%Y-%m-%dT%H:%M:%S").strftime("%S"))
-
-            clean_project["files"].append(file["Id"])
-            cleaned_files[file["Id"]] = clean_file
-
-        clean_project["attachments"] = list()
-
-        if "Attachments" in project:
-            for attachment in project["Attachments"]:
-                clean_attachment = dict()
-
-                for orig in attachment_fields:
-                    clean_attachment[attachment_fields[orig]] = attachment[orig]
-
-                clean_project["attachments"].append(clean_attachment)
-
-        cleaned_projects[project["Id"]] = clean_project
-
-    return {"projects": cleaned_projects, "files": cleaned_files}
+    return cleaned_file
