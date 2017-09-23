@@ -1,4 +1,5 @@
 from DB import DB
 from sys import argv
+from json import loads
 
-db = DB(argv[1])
+db = DB(loads(open(argv[1]).read()))

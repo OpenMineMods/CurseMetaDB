@@ -24,21 +24,14 @@
 """
 
 from fuzzywuzzy.fuzz import partial_ratio, ratio
-from os import listdir, path
-from json import loads
-from MessCleaner import clean_project, clean_file, clean_category
 
 
 class DB:
-    def __init__(self, meta_folder: str):
-        self.projects = dict()
-        self.files = dict()
-        self.categories = dict()
-        self.authors = dict()
-
-        project_list = self._ls(meta_folder)
-        for project in project_list:
-            self._load_project(project)
+    def __init__(self, meta: dict):
+        self.projects = meta["projects"]
+        self.files = meta["files"]
+        self.categories = meta["categories"]
+        self.authors = meta["authors"]
 
         self.popular = dict()
         self._gen_popular()
@@ -115,36 +108,3 @@ class DB:
             for project in [i for i in self.projects if self.get_project(i)["type"] == ptype]:
                 of_type[project] = self.get_project(project)
             self.popular[ptype] = sorted(of_type, key=lambda x: of_type[x]["rank"])
-
-    def _load_project(self, project_folder: str):
-        manifest = loads(open(path.join(project_folder, "index.json")).read())
-        project = clean_project(manifest)
-        project["versions"] = list()
-        project["categories"] = list()
-        project["authors"] = list()
-
-        files = self._ls(path.join(project_folder, "files"))
-        for file in files:
-            file = clean_file(loads(open(file).read()))
-            file["project"] = project["id"]
-            project["versions"] += file["versions"]
-
-            project["files"].append(file["id"])
-            self.files[file["id"]] = file
-
-        for category in manifest["Categories"]:
-            category = clean_category(category)
-            self.categories[category["id"]] = category
-            project["categories"].append(category["id"])
-
-        for author in manifest["Authors"]:
-            self.authors[author["Name"]] = author["Url"]
-            project["authors"].append(author["Name"])
-
-        project["versions"] = list(set(project["versions"]))
-        self.projects[project["id"]] = project
-
-    # Utils
-
-    def _ls(self, folder: str):
-        return [path.join(folder, i) for i in listdir(folder)]
