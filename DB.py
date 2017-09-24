@@ -44,8 +44,8 @@ class DB:
         return False
 
     def get_file(self, fid: int):
-        if fid in self.files:
-            return self.files[fid]
+        if str(fid) in self.files:
+            return self.files[str(fid)]
         return False
 
     def get_category(self, cid: int):
