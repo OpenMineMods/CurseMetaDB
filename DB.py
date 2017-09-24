@@ -39,8 +39,8 @@ class DB:
     # Querying
 
     def get_project(self, pid: int):
-        if pid in self.projects:
-            return self.projects[pid]
+        if str(pid) in self.projects:
+            return self.projects[str(pid)]
         return False
 
     def get_file(self, fid: int):
@@ -49,8 +49,8 @@ class DB:
         return False
 
     def get_category(self, cid: int):
-        if cid in self.categories:
-            return self.categories[cid]
+        if str(cid) in self.categories:
+            return self.categories[str(cid)]
         return False
 
     def search_projects(self, q: str, ptype: str, limit=25, threshold=80, version="*"):
