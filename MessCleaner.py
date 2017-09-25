@@ -100,7 +100,7 @@ def clean_file(file: dict):
         cleaned_file[file_fields[orig]] = file[orig]
 
     cleaned_file["project"] = None
-    cleaned_file["date"] = int(datetime.strptime(cleaned_file["date"], "%Y-%m-%dT%H:%M:%S").strftime("%S"))
+    cleaned_file["date"] = int(datetime.strptime(cleaned_file["date"], "%Y-%m-%dT%H:%M:%S").strftime("%s"))
 
     return cleaned_file
 
