@@ -111,3 +111,10 @@ def clean_category(category: dict):
         cleaned_category[category_fields[orig]] = category[orig]
 
     return cleaned_category
+
+def clean_attachment(attachment: dict):
+    cleaned_attachment = dict()
+    for orig in attachment_fields:
+        cleaned_attachment[attachment_fields[orig]] = attachment[orig]
+
+    return cleaned_attachment

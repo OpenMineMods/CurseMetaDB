@@ -1,7 +1,7 @@
 from sys import argv
 from os import listdir, path
 from json import loads, dumps
-from MessCleaner import clean_category, clean_file, clean_project
+from MessCleaner import clean_category, clean_file, clean_project, clean_attachment
 
 
 def ls(folder: str):
@@ -20,6 +20,7 @@ for project_folder in ls(folder):
     project["versions"] = list()
     project["categories"] = list()
     project["authors"] = list()
+    project["attachments"] = list()
 
     raw_files = ls(path.join(project_folder, "files"))
     for file in raw_files:
@@ -38,6 +39,10 @@ for project_folder in ls(folder):
     for author in manifest["Authors"]:
         authors[author["Name"]] = author["Url"]
         project["authors"].append(author["Name"])
+
+    if "Attachments" in manifest:
+        for attachment in manifest["Attachments"]:
+            project["attachments"].append(clean_attachment(attachment))
 
     project["versions"] = list(set(project["versions"]))
     projects[project["id"]] = project
