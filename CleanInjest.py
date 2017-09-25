@@ -15,7 +15,7 @@ categories = dict()
 authors = dict()
 
 for project_folder in ls(folder):
-    manifest = loads(open(path.join(project_folder, "index.json")).read())
+    manifest = loads(open(path.join(project_folder, "index.json"), encoding='utf-8').read())
     project = clean_project(manifest)
     project["versions"] = list()
     project["categories"] = list()
@@ -24,7 +24,7 @@ for project_folder in ls(folder):
 
     raw_files = ls(path.join(project_folder, "files"))
     for file in raw_files:
-        file = clean_file(loads(open(file).read()))
+        file = clean_file(loads(open(file, encoding='utf-8').read()))
         file["project"] = project["id"]
         project["versions"] += file["versions"]
 
@@ -56,5 +56,5 @@ out = dumps({
     "authors": authors
 }, separators=(",", ":"))
 
-f_len = open(argv[2], 'w+').write(out)
+f_len = open(argv[2], 'w+', encoding='utf-8').write(out)
 print("Wrote {} bytes to {}".format(f_len, argv[2]))
