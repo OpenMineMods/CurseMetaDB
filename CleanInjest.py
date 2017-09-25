@@ -31,6 +31,8 @@ for project_folder in ls(folder):
         project["files"].append(file["id"])
         files[file["id"]] = file
 
+    project["files"] = list(set(project["files"]))
+
     for category in manifest["Categories"]:
         category = clean_category(category)
         categories[category["id"]] = category
