@@ -33,9 +33,6 @@ class DB:
         self.categories = meta["categories"]
         self.authors = meta["authors"]
 
-        self.popular = dict()
-        self._gen_popular()
-
     # Querying
 
     def get_project(self, pid: int):
@@ -75,7 +72,9 @@ class DB:
                 if len(out) >= limit:
                     break
         out.sort(key=lambda x: x[1])
-        return [i[0] for i in out[::-1]][:limit]
+        projects = [i[0] for i in out]
+        projects.sort(key=lambda p: p["popularity"])
+        return projects[:limit]
 
     def search_files(self, filename: str):
         for file in self.files.values():
@@ -94,17 +93,3 @@ class DB:
         if len(out) > 0:
             return out
         return False
-
-    def get_popular(self, ptype: str, limit=25, version="*"):
-        if version != "*":
-            return [i for i in self.popular[ptype] if version in self.get_project(i)["versions"]][:limit]
-        return self.popular[ptype][:limit]
-
-    # Init
-
-    def _gen_popular(self):
-        for ptype in ["mod", "texturepack", "world", "modpack"]:
-            of_type = dict()
-            for project in [i for i in self.projects if self.get_project(i)["type"] == ptype]:
-                of_type[project] = self.get_project(project)
-            self.popular[ptype] = sorted(of_type, key=lambda x: of_type[x]["rank"])
