@@ -52,13 +52,13 @@ class DB:
 
     def search_projects(self, q: str, ptype: str, limit=25, threshold=80, version="*"):
         out = list()
-        popular = not q == ""
+        popular = q == ""
         for n in self.projects.values():
             if ptype != "*" and n["type"] != ptype:
                 continue
             if version != "*" and version not in n["versions"]:
                 continue
-            if popular:
+            if not popular:
                 part_ratio = partial_ratio(q.lower(), n["title"].lower())
                 full_ratio = ratio(q.lower(), n["title"].lower())
 
@@ -78,7 +78,7 @@ class DB:
         out.sort(key=lambda x: x[1])
         projects = [i[0] for i in out[::-1]]
         if popular:
-            projects.sort(key=lambda p: p["popularity"], reverse=True)
+            projects.sort(key=lambda p: p["popularity"], reverse=False)
         return projects[:limit]
 
     def search_files(self, filename: str):
