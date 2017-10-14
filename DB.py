@@ -52,28 +52,33 @@ class DB:
 
     def search_projects(self, q: str, ptype: str, limit=25, threshold=80, version="*"):
         out = list()
+        popular = not q == ""
         for n in self.projects.values():
             if ptype != "*" and n["type"] != ptype:
                 continue
             if version != "*" and version not in n["versions"]:
                 continue
-            part_ratio = partial_ratio(q.lower(), n["title"].lower())
-            full_ratio = ratio(q.lower(), n["title"].lower())
+            if popular:
+                part_ratio = partial_ratio(q.lower(), n["title"].lower())
+                full_ratio = ratio(q.lower(), n["title"].lower())
 
-            body_ratio = partial_ratio(q.lower(), n["desc"].lower())
-            full_body_ratio = ratio(q.lower(), n["desc"].lower())
-            if part_ratio >= threshold:
-                out.append((n, part_ratio + full_ratio))
-                if len(out) >= limit:
-                    break
-                continue
-            if body_ratio >= threshold:
-                out.append((n, body_ratio + full_body_ratio))
-                if len(out) >= limit:
-                    break
+                body_ratio = partial_ratio(q.lower(), n["desc"].lower())
+                full_body_ratio = ratio(q.lower(), n["desc"].lower())
+                if part_ratio >= threshold:
+                    out.append((n, part_ratio + full_ratio))
+                    if len(out) >= limit:
+                        break
+                    continue
+                if body_ratio >= threshold:
+                    out.append((n, body_ratio + full_body_ratio))
+                    if len(out) >= limit:
+                        break
+            else:
+                out.append((n, 0))
         out.sort(key=lambda x: x[1])
-        projects = [i[0] for i in out]
-        projects.sort(key=lambda p: p["popularity"])
+        projects = [i[0] for i in out[::-1]]
+        if popular:
+            projects.sort(key=lambda p: p["popularity"], reverse=True)
         return projects[:limit]
 
     def search_files(self, filename: str):
