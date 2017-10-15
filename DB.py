@@ -78,7 +78,7 @@ class DB:
         out.sort(key=lambda x: x[1])
         projects = [i[0] for i in out[::-1]]
         if popular:
-            projects.sort(key=lambda p: p["popularity"], reverse=False)
+            projects.sort(key=lambda p: p["popularity"], reverse=True)
         return projects[:limit]
 
     def search_files(self, filename: str):
