@@ -100,7 +100,10 @@ def clean_file(file: dict):
         cleaned_file[file_fields[orig]] = file[orig]
 
     cleaned_file["project"] = None
-    cleaned_file["date"] = int(datetime.strptime(cleaned_file["date"], "%Y-%m-%dT%H:%M:%S").strftime("%s"))
+    try:
+        cleaned_file["date"] = int(datetime.strptime(cleaned_file["date"], "%Y-%m-%dT%H:%M:%S").timestamp())
+    except ValueError:
+        cleaned_file["date"] = int(datetime.strptime(cleaned_file["date"], "%Y-%m-%dT%H:%M:%S.%f").timestamp())
 
     return cleaned_file
 
