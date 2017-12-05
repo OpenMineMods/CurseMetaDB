@@ -26,33 +26,19 @@
 from datetime import datetime
 
 project_fields = {
-    "Stage": "stage",
-    "DefaultFileId": "defaultFile",
     "WebSiteURL": "site",
-    "DownloadCount": "downloads",
     "PackageType": "type",
-    "PrimaryCategoryId": "primaryCategory",
     "Categories": "categories",
-    "Summary": "desc",
+    "Summary": "description",
     "Name": "title",
     "IsFeatured": "featured",
-    "PopularityScore": "popularity",
-    "GamePopularityRank": "rank",
-    "PrimaryAuthorName": "primaryAuthor",
     "Id": "id"
 }
 
 file_fields = {
-    "FileNameOnDisk": "filename",
-    "ReleaseType": "type",
     "Dependencies": "dependencies",
-    "IsAvailable": "available",
     "FileDate": "date",
     "GameVersion": "versions",
-    "PackageFingerprint": "fingerprint",
-    "IsAlternate": "alternate",
-    "FileName": "name",
-    "AlternateFileId": "alternateFile",
     "DownloadURL": "url",
     "Id": "id"
 }
@@ -71,35 +57,56 @@ category_fields = {
     "Name": "title"
 }
 
+dependency_fields = {
+    "AddOnId": "file",
+    "file": "file"
+}
+
 type_map = {
-    "mod": "mod",
-    "singleFile": "texturepack",
-    "folder": "world",
-    "modPack": "modpack"
+    "modPack": 0,  # modpack
+    "mod": 1,  # mod
+    "singleFile": 2,  # texturepack
+    "folder": 3,  # world
 }
 
 
 def clean_project(project: dict):
+    del project["Stage"]
     cleaned_project = dict()
     for orig in project_fields:
         cleaned_project[project_fields[orig]] = project[orig]
 
     cleaned_project["featured"] = bool(cleaned_project["featured"])
-    cleaned_project["downloads"] = int(cleaned_project["downloads"])
     cleaned_project["type"] = type_map[cleaned_project["type"]]
     cleaned_project["files"] = list()
 
     return cleaned_project
 
 
+def clean_dep(dep: dict):
+    cleaned_dep = dict()
+    cleaned_dep["optional"] = dep["Type"] == "optional"
+    del dep["Type"]
+    for f in dep:
+        cleaned_dep[dependency_fields[f]] = dep[f]
+
+    return cleaned_dep
+
+
 def clean_file(file: dict):
     if type(file) == list:
         file = file[0]
     cleaned_file = dict()
+    cleaned_deps = list()
+
+    for dep in file["Dependencies"]:
+        cleaned_deps.append(clean_dep(dep))
+
     for orig in file_fields:
         cleaned_file[file_fields[orig]] = file[orig]
 
-    cleaned_file["project"] = None
+    cleaned_file["dependencies"] = cleaned_deps
+
     try:
         cleaned_file["date"] = int(datetime.strptime(cleaned_file["date"], "%Y-%m-%dT%H:%M:%S").timestamp())
     except ValueError:
@@ -114,6 +121,7 @@ def clean_category(category: dict):
         cleaned_category[category_fields[orig]] = category[orig]
 
     return cleaned_category
+
 
 def clean_attachment(attachment: dict):
     cleaned_attachment = dict()
