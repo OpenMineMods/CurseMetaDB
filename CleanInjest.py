@@ -3,7 +3,7 @@
 from sys import argv
 from os import listdir, path
 from json import loads, dumps
-from MessCleaner import clean_category, clean_file, clean_project, clean_attachment
+from MessCleaner import clean_category, clean_file, clean_project
 
 
 def ls(folder: str):
@@ -11,16 +11,14 @@ def ls(folder: str):
 
 
 folder = argv[1]
-
 projects = dict()
-files = dict()
 categories = dict()
-authors = dict()
+files = dict()
 
 for project_folder in ls(folder):
     manifest = loads(open(path.join(project_folder, "index.json"), encoding='utf-8').read())
     project = clean_project(manifest)
-    project["versions"] = list()
+    project["minecraft"] = list()
     project["categories"] = list()
     project["authors"] = list()
 
@@ -29,39 +27,41 @@ for project_folder in ls(folder):
         "popularity": float(manifest["PopularityScore"])
     }
     raw_files = ls(path.join(project_folder, "files"))
+
+    pid = project["id"]
     for file in raw_files:
         file = clean_file(loads(open(file, encoding='utf-8').read()))
-        file["project"] = project["id"]
-        project["versions"] += file["versions"]
-
-        project["files"].append(file["id"])
-        files[file["id"]] = file
-
-    project["files"] = list(set(project["files"]))
+        fid = file["id"]
+        file["project"] = pid
+        project["minecraft"] += file["minecraft"]
+        project["files"].append(fid)
+        files[fid] = file
 
     for category in manifest["Categories"]:
         category = clean_category(category)
-        categories[category["id"]] = category
-        project["categories"].append(category["id"])
+        cid = category["id"]
+        categories[cid] = category
+        project["categories"].append(cid)
 
     for author in manifest["Authors"]:
-        authors[author["Name"]] = author["Url"]
         project["authors"].append({"username": author["Name"]})
 
     if "Attachments" in manifest:
         for attachment in manifest["Attachments"]:
             if "IsDefault" in attachment and attachment["IsDefault"]:
-                project["icon"] = {"path": attachment["Url"], "hash": path.splitext(attachment["Title"])[0]}
+                project["icon"] = {"url": attachment["Url"], "hash": path.splitext(attachment["Title"])[0]}
+        if "icon" not in project:
+            attachment = manifest["Attachments"][0]
+            project["icon"] = {"url": attachment["Url"], "hash": path.splitext(attachment["Title"])[0]}
 
-    project["versions"] = list(set(project["versions"]))
-    projects[project["id"]] = project
+    project["minecraft"] = list(set(project["minecraft"]))
+    projects[pid] = project
 
 out = dumps({
     "projects": projects,
-    "files": files,
     "categories": categories,
-    "authors": authors
-}, separators=(",", ":"))
+    "files": files
+}, separators=(",", ":"), indent=4, sort_keys=True)
 
-f_len = open(argv[2], 'w+', encoding='utf-8').write(out)
+f_len = open(argv[2], 'w', encoding='utf-8').write(out)
 print("Wrote {} bytes to {}".format(f_len, argv[2]))

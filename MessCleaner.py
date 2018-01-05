@@ -38,9 +38,11 @@ project_fields = {
 file_fields = {
     "Dependencies": "dependencies",
     "FileDate": "date",
-    "GameVersion": "versions",
+    "GameVersion": "minecraft",
     "DownloadURL": "url",
-    "Id": "id"
+    "Id": "id",
+    "FileName": "displayname",
+    "FileNameOnDisk": "filename"
 }
 
 attachment_fields = {
@@ -79,7 +81,6 @@ def clean_project(project: dict):
     cleaned_project["featured"] = bool(cleaned_project["featured"])
     cleaned_project["type"] = type_map[cleaned_project["type"]]
     cleaned_project["files"] = list()
-
     return cleaned_project
 
 
