@@ -22,20 +22,31 @@ for project_folder in ls(folder):
     project["categories"] = list()
     project["authors"] = list()
 
-    project["stats"] = {
-        "downloads": int(manifest["DownloadCount"]),
-        "popularity": float(manifest["PopularityScore"])
-    }
+    pid = project["id"]
+
+    cleaned_files = list()
     raw_files = ls(path.join(project_folder, "files"))
 
-    pid = project["id"]
     for file in raw_files:
         file = clean_file(loads(open(file, encoding='utf-8').read()))
+        cleaned_files.append(file)
+
+    for file in cleaned_files:
         fid = file["id"]
         file["project"] = pid
         project["minecraft"] += file["minecraft"]
         project["files"].append(fid)
         files[fid] = file
+
+    oldest_date = min(file["date"] for file in cleaned_files)
+    newest_date = max(file["date"] for file in cleaned_files)
+
+    project["stats"] = {
+        "downloads": int(manifest["DownloadCount"]),
+        "popularity": float(manifest["PopularityScore"]),
+        "created": int(oldest_date),
+        "latest": int(newest_date)
+    }
 
     for category in manifest["Categories"]:
         category = clean_category(category)
