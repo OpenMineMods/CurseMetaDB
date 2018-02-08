@@ -96,7 +96,10 @@ def clean_dep(dep: dict):
 
 def clean_file(file: dict):
     if type(file) == list:
-        file = file[0]
+        if len(file) > 0:
+            file = file[0]
+        else:
+            return None
     cleaned_file = dict()
     cleaned_deps = list()
 

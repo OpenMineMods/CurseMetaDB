@@ -28,8 +28,9 @@ for project_folder in ls(folder):
     raw_files = ls(path.join(project_folder, "files"))
 
     for file in raw_files:
-        file = clean_file(loads(open(file, encoding='utf-8').read()))
-        cleaned_files.append(file)
+        clean = clean_file(loads(open(file, encoding='utf-8').read()))
+        if clean is not None:
+            cleaned_files.append(clean)
 
     for file in cleaned_files:
         fid = file["id"]
